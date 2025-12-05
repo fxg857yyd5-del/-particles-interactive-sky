@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>99球聚散-北方玄武七宿循环版</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #000;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .ball {
+            position: absolute;
+            border-radius: 50%;
+            background-color: #fff;
+            box-shadow: 0 0 15px #4fc3f7;
+            transform: translate(-50%, -50%);
+            transition: all 2.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes randomScale {
+            0%, 100% { transform: translate(-50%, -50%) scale(var(--scale)); }
+            50% { transform: translate(-50%, -50%) scale(calc(var(--scale) * 1.2)); }
+        }
+        /* 增强阴影亮度的核心星闪烁动画 */
+        @keyframes coreStarPulse {
+            0%, 100% { box-shadow: 0 0 15px #4fc3f7; opacity: 1; }
+            50% { box-shadow: 0 0 40px #4fc3f7; opacity: 0.8; }
+        }
+        .title-container {
+            position: absolute;
+            top: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+        .constellation-title {
+            font-family: SimSun, serif;
+            color: #4fc3f7;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .mansion-label {
+            font-family: SimSun, serif;
+            color: #4fc3f7;
+            font-size: 17px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 2s;
+            margin: 5px 0 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="title-container">
+        <h1 class="constellation-title">北方玄武七宿</h1>
+        <div class="mansion-label" id="currentLabel"></div>
+    </div>
+
+    <script>
+        const totalBalls = 99;
+        let currentState = 'aggregate';
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+        const bigSphereRadius = Math.min(window.innerWidth, window.innerHeight) * 0.4;
+        const scaleFactor = 2;
+        const offsetX = 50;
+        const offsetY = 50;
+
+        const xuanWuMansions = [
+            {
+                name: "斗木獬",
+                coords: [
+                    { x: offsetX + (42 - offsetX) * scaleFactor, y: offsetY + (38 - offsetY) * scaleFactor },
+                    { x: offsetX + (48 - offsetX) * scaleFactor, y: offsetY + (35 - offsetY) * scaleFactor },
+                    { x: offsetX + (54 - offsetX) * scaleFactor, y: offsetY + (38 - offsetY) * scaleFactor },
+                    { x: offsetX + (51 - offsetX) * scaleFactor, y: offsetY + (44 - offsetY) * scaleFactor },
+                    { x: offsetX + (45 - offsetX) * scaleFactor, y: offsetY + (47 - offsetY) * scaleFactor },
+                    { x: offsetX + (39 - offsetX) * scaleFactor, y: offsetY + (43 - offsetY) * scaleFactor },
+                    ...Array.from({ length: 93 }, () => ({ 
+                        x: offsetX + (39 + Math.random() * 18 - offsetX) * scaleFactor, 
+                        y: offsetY + (35 + Math.random() * 15 - offsetY) * scaleFactor 
+                    }))
+                ]
+            },
+            {
+                name: "牛金牛",
+                coords: [
+                    { x: offsetX + (45 - offsetX) * scaleFactor, y: offsetY + (40 - offsetY) * scaleFactor },
+                    { x: offsetX + (52 - offsetX) * scaleFactor, y: offsetY + (32 - offsetY) * scaleFactor },
+                    { x: offsetX + (58 - offsetX) * scaleFactor, y: offsetY + (38 - offsetY) * scaleFactor },
+                    { x: offsetX + (55 - offsetX) * scaleFactor, y: offsetY + (46 - offsetY) * scaleFactor },
+                    { x: offsetX + (38 - offsetX) * scaleFactor, y: offsetY + (48 - offsetY) * scaleFactor },
+                    { x: offsetX + (42 - offsetX) * scaleFactor, y: offsetY + (35 - offsetY) * scaleFactor },
+                    ...Array.from({ length: 93 }, () => ({ 
+                        x: offsetX + (40 + Math.random() * 20 - offsetX) * scaleFactor, 
+                        y: offsetY + (32 + Math.random() * 18 - offsetY) * scaleFactor 
+                    }))
+                ]
+            },
+            {
+                name: "女土蝠",
+                coords: [
+                    { x: offsetX + (45 - offsetX) * scaleFactor, y: offsetY + (38 - offsetY) * scaleFactor },
+                    { x: offsetX + (55 - offsetX) * scaleFactor, y: offsetY + (38 - offsetY) * scaleFactor },
+                    { x: offsetX + (40 - offsetX) * scaleFactor, y: offsetY + (48 - offsetY) * scaleFactor },
+                    { x: offsetX + (60 - offsetX) * scaleFactor, y: offsetY + (48 - offsetY) * scaleFactor },
+                    ...Array.from({ length: 95 }, () => ({ 
+                        x: offsetX + (40 + Math.random() * 25 - offsetX) * scaleFactor, 
+                        y: offsetY + (38 + Math.random() * 15 - offsetY) * scaleFactor 
+                    }))
+                ]
+            },
+            {
+                name: "虚日鼠",
+                coords: [
+                    { x: offsetX + (47 - offsetX) * scaleFactor, y: offsetY + (44 - offsetY) * scaleFactor },
+                    { x: offsetX + (50 - offsetX) * scaleFactor, y: offsetY + (46 - offsetY) * scaleFactor },
+                    ...Array.from({ length: 97 }, () => ({ 
+                        x: offsetX + (42 + Math.random() * 18 - offsetX) * scaleFactor, 
+                        y: offsetY + (39 + Math.random() * 15 - offsetY) * scaleFactor 
+                    }))
+                ]
+            },
+            {
+                name: "危月燕",
+                coords: [
+                    { x: offsetX + (40 - offsetX) * scaleFactor, y: offsetY + (38 - offsetY) * scaleFactor },
+                    { x: offsetX + (55 - offsetX) * scaleFactor, y: offsetY + (42 - offsetY) * scaleFactor },
+                    { x: offsetX + (45 - offsetX) * scaleFactor, y: offsetY + (48 - offsetY) * scaleFactor },
+                    ...Array.from({ length: 96 }, () => ({ 
+                        x: offsetX + (40 + Math.random() * 18 - offsetX) * scaleFactor, 
+                        y: offsetY + (38 + Math.random() * 15 - offsetY) * scaleFactor 
+                    }))
+                ]
+            },
+            {
+                name: "室火猪",
+                coords: [
+                    { x: offsetX + (48 - offsetX) * scaleFactor, y: offsetY + (40 - offsetY) * scaleFactor },
+                    { x: offsetX + (45 - offsetX) * scaleFactor, y: offsetY + (45 - offsetY) * scaleFactor },
+                    { x: offsetX + (42 - offsetX) * scaleFactor, y: offsetY + (50 - offsetY) * scaleFactor },
+                    { x: offsetX + (35 - offsetX) * scaleFactor, y: offsetY + (43 - offsetY) * scaleFactor },
+                    { x: offsetX + (38 - offsetX) * scaleFactor, y: offsetY + (40 - offsetY) * scaleFactor },
+                    { x: offsetX + (55 - offsetX) * scaleFactor, y: offsetY + (43 - offsetY) * scaleFactor },
+                    { x: offsetX + (52 - offsetX) * scaleFactor, y: offsetY + (40 - offsetY) * scaleFactor },
+                    { x: offsetX + (58 - offsetX) * scaleFactor, y: offsetY + (46 - offsetY) * scaleFactor },
+                    { x: offsetX + (48 - offsetX) * scaleFactor, y: offsetY + (35 - offsetY) * scaleFactor },
+                    ...Array.from({ length: 90 }, () => ({ 
+                        x: offsetX + (35 + Math.random() * 25 - offsetX) * scaleFactor, 
+                        y: offsetY + (35 + Math.random() * 18 - offsetY) * scaleFactor 
+                    }))
+                ]
+            },
+            {
+                name: "壁水獝",
+                coords: [
+                    { x: offsetX + (44 - offsetX) * scaleFactor, y: offsetY + (44 - offsetY) * scaleFactor },
+                    { x: offsetX + (47 - offsetX) * scaleFactor, y: offsetY + (46 - offsetY) * scaleFactor },
+                    ...Array.from({ length: 97 }, () => ({ 
+                        x: offsetX + (39 + Math.random() * 18 - offsetX) * scaleFactor, 
+                        y: offsetY + (39 + Math.random() * 15 - offsetY) * scaleFactor 
+                    }))
+                ]
+            }
+        ];
+
+        const balls = [];
+        const label = document.getElementById('currentLabel');
+
+        for (let i = 0; i < totalBalls; i++) {
+            const ball = document.createElement('div');
+            ball.classList.add('ball');
+            ball.style.width = '4px';
+            ball.style.height = '4px';
+            document.body.appendChild(ball);
+            balls.push(ball);
+        }
+
+        function aggregate() {
+            label.style.opacity = 0;
+            balls.forEach((ball, i) => {
+                const theta = Math.acos(2 * Math.random() - 1);
+                const phi = 2 * Math.PI * Math.random();
+                const x = centerX + bigSphereRadius * Math.sin(theta) * Math.cos(phi);
+                const y = centerY + bigSphereRadius * Math.sin(theta) * Math.sin(phi);
+                const randomSizeMultiplier = 1 + Math.random() * 2;
+                ball.style.width = `${4 * randomSizeMultiplier}px`;
+                ball.style.height = `${4 * randomSizeMultiplier}px`;
+                ball.style.setProperty('--scale', randomSizeMultiplier);
+                ball.style.left = `${x}px`;
+                ball.style.top = `${y}px`;
+                ball.style.animation = `randomScale 3s infinite ${Math.random() * 2}s`;
+                ball.style.animationName = 'randomScale';
+            });
+            currentState = 'aggregate';
+        }
+
+        function showMansion(index) {
+            const mansion = xuanWuMansions[index];
+            label.textContent = `· ${mansion.name}`;
+            label.style.opacity = 1;
+
+            balls.forEach((ball, i) => {
+                const coord = mansion.coords[i];
+                const x = (coord.x / (offsetX * scaleFactor)) * window.innerWidth;
+                const y = (coord.y / (offsetY * scaleFactor)) * window.innerHeight;
+                let coreStarCount = 2;
+                if (mansion.name === "斗木獬") coreStarCount = 6;
+                if (mansion.name === "牛金牛") coreStarCount = 6;
+                if (mansion.name === "女土蝠") coreStarCount = 4;
+                if (mansion.name === "危月燕") coreStarCount = 3;
+                if (mansion.name === "室火猪") coreStarCount = 9;
+                // 核心修改：核心星尺寸在20~30px随机，星尘保持3-7px
+                const size = i < coreStarCount ? 20 + Math.floor(Math.random() * 11) : 3 + Math.random() * 4;
+                ball.style.width = `${size}px`;
+                ball.style.height = `${size}px`;
+                ball.style.left = `${x}px`;
+                ball.style.top = `${y}px`;
+                
+                if (i < coreStarCount) {
+                    ball.style.animation = 'coreStarPulse 2s infinite ease-in-out';
+                } else {
+                    ball.style.animation = 'none';
+                }
+            });
+            currentState = index;
+        }
+
+        document.body.addEventListener('click', () => {
+            if (currentState === 'aggregate') {
+                showMansion(0);
+            } else if (currentState === 6) {
+                aggregate();
+            } else {
+                showMansion(currentState + 1);
+            }
+        });
+
+        aggregate();
+        window.addEventListener('resize', () => {
+            if (currentState === 'aggregate') {
+                aggregate();
+            } else {
+                showMansion(currentState);
+            }
+        });
+    </script>
+</body>
+</html>
